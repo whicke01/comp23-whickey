@@ -29,7 +29,10 @@ class Battlecruiser(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = init_x
         self.rect.y = init_y
-            
+        
+        #set the laser group
+        self.lasers = pygame.sprite.Group()
+        
 		# Set the (x, y)
         self.x = init_x
         self.y = init_y
@@ -41,13 +44,23 @@ class Battlecruiser(pygame.sprite.Sprite):
     def update(self, dir):
         """update the battlecruiser with movement"""
         if dir == "UP":
-            self.dy = -.5
+            self.y = self.y - 3
         elif dir == "DOWN":
-            self.dy = .5
+            self.y = self.y + 3
         elif dir == "LEFT":
-			self.dx = -.5
+			self.x = self.x - 3
         elif dir == "RIGHT":
-            self.dx = .5
+            self.x = self.x + 3
+        elif dir == "SPACE":
+            self.fire_laser()
+        elif dir == "UP_VEL":
+            self.y = self.y - 3
+        elif dir == "DOWN_VEL":
+            self.y = self.y + 3
+        elif dir == "LEFT_VEL":
+			self.x = self.x - 3
+        elif dir == "RIGHT_VEL":
+            self.x = self.x + 3
             
         self.x = self.x + self.dx
         self.y = self.y + self.dy
@@ -59,7 +72,67 @@ class Battlecruiser(pygame.sprite.Sprite):
         
     def draw(self):
         """Draws the battlecruiser on the screen"""
+        self.lasers.update()
+        self.lasers.draw(self.screen)
         self.screen.blit(self.image, (self.x, self.y))
+        
+    def fire_laser(self):
+        self.lasers.add(Laser(self.screen, "laser.gif", self.x + 50, self.y, 0, -5))
+
+class Laser(pygame.sprite.Sprite):
+    """A simple vertically moving laser"""
+    
+    def load_image(self, image_name):
+        ''' The proper way to load an image '''
+        try:
+            image = pygame.image.load(image_name)
+        except pygame.error, message:
+            print "Cannot load image: " + image_name
+            raise SystemExit, message
+        return image.convert_alpha()
+    
+    def __init__(self, screen, img_filename, init_x, init_y, init_x_speed, init_y_speed):
+        """initializes lazer sprite"""
+        pygame.sprite.Sprite.__init__(self) #call Sprite initializer
+        self.screen = screen
+        
+        #Load the image
+        self.image = self.load_image(img_filename)
+        self.rect = self.image.get_rect() # Set the rect attribute for the sprite (absolutely necessary for collision detection)
+
+		# Get the image's width and height
+        self.image_w, self.image_h = self.image.get_size()
+        
+        # Create a moving collision box
+        self.rect = self.image.get_rect()
+        self.rect.x = init_x
+        self.rect.y = init_y
+				
+		# Set the (x, y)
+        self.x = init_x
+        self.y = init_y
+		
+		# Set the default speed (dx, dy)
+        self.dx = init_x_speed
+        self.dy = init_y_speed
+        
+        #set the active bool to true
+        self.active = True
+        
+    def update(self):
+        """Move the laser up the screen"""
+        self.x = self.x + self.dx
+        self.y = self.y + self.dy
+        self.rect.y += self.dy
+        self.rect.move(self.rect.x, self.rect.y)
+        
+        if self.rect.y <= ((-1) * self.image_h):
+            self.active = False 
+        
+    def draw(self):
+        """draw the laser on the screen"""
+        if self.active == True:
+            self.screen.blit(self.image, (self.x, self.y))
         
 if __name__ == "__main__":
     """The main part of moving the cruiser"""
@@ -77,6 +150,7 @@ if __name__ == "__main__":
     
     # Initialize Pygame, the clock (for FPS), and a simple counter
     pygame.init()
+    clock = pygame.time.Clock()
     
     #Set the display settings
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -87,18 +161,22 @@ if __name__ == "__main__":
     
     bc_hero = Battlecruiser(screen, SPRITE_IMAGE, 300, 400, 0, 0,)
     
+    decompi = None
     #The game loop
     while True:
+        clock.tick(FPS)
+        keys = pygame.key.get_pressed()
         screen.fill(BACKGROUND_COLOR)
         bc_hero.draw()
         
-        bc_hero.update(pressed)
+        decompi = None
+        
     
         #Update the entire drawing surface
         pygame.display.flip()
-    
+        
         # Process events via input function
-        pressed = None
+        #print(len(pygame.event.get()))
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -111,10 +189,26 @@ if __name__ == "__main__":
                     pressed = "LEFT"
                 elif event.key == K_RIGHT:
                     pressed = "RIGHT"
-                else:
-                    pressed = None
+                elif event.key == K_SPACE:
+                    pressed = "SPACE"
+            else:
+                pressed = None
+            
+            bc_hero.update(pressed)
+                
+        if pressed != None:
+            if keys[K_ESCAPE]:
+                quit()
+            elif keys[K_UP]:
+                pressed = "UP_VEL"
+            elif keys[K_DOWN]:
+                pressed = "DOWN_VEL"
+            elif keys[K_LEFT]:
+                pressed = "LEFT_VEL"
+            elif keys[K_RIGHT]:
+                pressed = "RIGHT_VEL"
     
-    
+        bc_hero.update(pressed)
     
     
 
