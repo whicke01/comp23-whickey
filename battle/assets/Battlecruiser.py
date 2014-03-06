@@ -160,16 +160,20 @@ if __name__ == "__main__":
     pressed = None
     
     bc_hero = Battlecruiser(screen, SPRITE_IMAGE, 300, 400, 0, 0,)
-    
+    laser_flag = 0;
     decompi = None
     #The game loop
     while True:
         clock.tick(FPS)
+        laser_flag = laser_flag - 1
+        cool_down = False
+        if ( laser_flag >= 0):
+            cool_down = True
         keys = pygame.key.get_pressed()
         screen.fill(BACKGROUND_COLOR)
         bc_hero.draw()
         
-        decompi = None
+        #decompi = None
         
     
         #Update the entire drawing surface
@@ -183,32 +187,45 @@ if __name__ == "__main__":
                     quit()
                 elif event.key == K_UP:
                     pressed = "UP"
+                    bc_hero.update(pressed)
                 elif event.key == K_DOWN:
                     pressed = "DOWN"
+                    bc_hero.update(pressed)
                 elif event.key == K_LEFT:
                     pressed = "LEFT"
+                    bc_hero.update(pressed)
                 elif event.key == K_RIGHT:
                     pressed = "RIGHT"
+                    bc_hero.update(pressed)
                 elif event.key == K_SPACE:
-                    pressed = "SPACE"
-            else:
-                pressed = None
+                    if (cool_down != True):
+                        pressed = "SPACE"
+                        laser_flag = 10;
+                        bc_hero.update(pressed)
             
-            bc_hero.update(pressed)
                 
         if pressed != None:
             if keys[K_ESCAPE]:
                 quit()
             elif keys[K_UP]:
                 pressed = "UP_VEL"
+                bc_hero.update(pressed)
             elif keys[K_DOWN]:
                 pressed = "DOWN_VEL"
+                bc_hero.update(pressed)
             elif keys[K_LEFT]:
                 pressed = "LEFT_VEL"
+                bc_hero.update(pressed)
             elif keys[K_RIGHT]:
                 pressed = "RIGHT_VEL"
+                bc_hero.update(pressed)
+            if keys[K_SPACE]:
+                if (cool_down != True):
+                    pressed = "SPACE"
+                    laser_flag = 10;
+                    bc_hero.update(pressed)
     
-        bc_hero.update(pressed)
+        
     
     
 
